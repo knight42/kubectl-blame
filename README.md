@@ -12,8 +12,14 @@ is able to display the manager of each field.
 ## Installing
 
 ```bash
-VERSION=0.0.1
+VERSION=0.0.2
 curl -o kubectl-blame.tar.gz -Lf https://github.com/knight42/kubectl-blame/releases/download/v${VERSION}/kubectl-blame-v${VERSION}-$(go env GOOS)-amd64.tar.gz
 tar xf kubectl-blame.tar.gz
 cp kubectl-blame-v${VERSION}-$(go env GOOS)-amd64/kubectl-blame $GOPATH/bin/
 ```
+
+## Demos
+
+### 1. Customize Time Format
+
+[![asciicast](https://asciinema.org/a/375691.svg)](https://asciinema.org/a/375691)
