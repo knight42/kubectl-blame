@@ -200,7 +200,7 @@ m3 (Update 2020-11-23 16:52:45 +0000)       protocol: UDP
 m2 (Update 2020-11-23 16:52:45 +0000)     resources: {}
                                       status: {}
 `
-	data, err := MarshalMetaObject(pod)
+	data, err := MarshalMetaObject(pod, TimeFormatFull)
 	if err != nil {
 		t.Fatal(err)
 	}

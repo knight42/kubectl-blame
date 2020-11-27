@@ -11,6 +11,8 @@ import (
 )
 
 type Options struct {
+	timeFormat string
+
 	namespace string
 	args      []string
 	builder   *resource.Builder
@@ -29,6 +31,9 @@ kubectl blame pods foo
 
 # Blame deployment 'bar' in 'ns1' namespace
 kubectl blame -n ns1 deploy bar
+
+# Blame deployment 'bar' in 'ns1' namespace and hide the update time
+kubectl blame -n ns1 --time none deploy bar
 `
 )
 
@@ -55,6 +60,7 @@ func NewCmdBlame() *cobra.Command {
 		},
 	}
 	f.AddFlags(cmd.Flags())
+	cmd.Flags().StringVar(&o.timeFormat, "time", TimeFormatRelative, "Time format. One of: full|relative|none.")
 	return cmd
 }
 
@@ -100,7 +106,7 @@ func (o *Options) Run() error {
 		return fmt.Errorf("unsupported object: %v: %s/%s", info.Mapping.Resource, info.Namespace, info.Name)
 	}
 
-	data, err := MarshalMetaObject(obj)
+	data, err := MarshalMetaObject(obj, o.timeFormat)
 	if err != nil {
 		return err
 	}

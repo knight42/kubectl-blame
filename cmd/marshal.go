@@ -6,6 +6,7 @@ import (
 	"io"
 	"sort"
 	"strings"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -16,6 +17,12 @@ import (
 
 const timeLayout = "2006-01-02 15:04:05 -0700"
 
+const (
+	TimeFormatFull     = "full"
+	TimeFormatRelative = "relative"
+	TimeFormatNone     = "none"
+)
+
 var (
 	bytesNull        = []byte("null\n")
 	bytesEmptyObject = []byte("{}\n")
@@ -24,6 +31,9 @@ var (
 
 type Marshaller struct {
 	emptyInfo string
+
+	now        time.Time
+	timeFormat string
 }
 
 type KeyWithNode struct {
@@ -34,11 +44,14 @@ type KeyWithNode struct {
 type ManagerInfo struct {
 	Manager   string
 	Operation string
-	Time      *metav1.Time
+	Time      string
 }
 
 func (i *ManagerInfo) String() string {
-	return fmt.Sprintf("%s (%s %s) ", i.Manager, i.Operation, i.Time.Format(timeLayout))
+	if len(i.Time) > 0 {
+		return fmt.Sprintf("%s (%s %s) ", i.Manager, i.Operation, i.Time)
+	}
+	return fmt.Sprintf("%s %s ", i.Manager, i.Operation)
 }
 
 type Node struct {
@@ -88,9 +101,27 @@ func (n *Node) print(lvl int, infoLength int) {
 	}
 }
 
-func buildTree(managedFields []metav1.ManagedFieldsEntry, mgrMaxLength, opMaxLength int) (*Node, error) {
+func (m *Marshaller) buildTree(managedFields []metav1.ManagedFieldsEntry, mgrMaxLength, opMaxLength, timeMaxLength int) (*Node, error) {
 	root := &Node{}
+	var timeFormatter func(time time.Time) string
+	switch m.timeFormat {
+	case TimeFormatFull:
+		timeFormatter = func(t time.Time) string {
+			return t.Format(timeLayout)
+		}
+	case TimeFormatRelative:
+		timeFormatter = func(t time.Time) string {
+			return humanDuration(m.now.Sub(t))
+		}
+	case TimeFormatNone:
+		timeFormatter = func(t time.Time) string {
+			return ""
+		}
+	default:
+		return nil, fmt.Errorf("unknown time format: %s", m.timeFormat)
+	}
 
+	var infoLength int
 	for _, field := range managedFields {
 		manager := field.Manager
 		operation := string(field.Operation)
@@ -100,11 +131,16 @@ func buildTree(managedFields []metav1.ManagedFieldsEntry, mgrMaxLength, opMaxLen
 		if len(operation) < opMaxLength {
 			operation = appendSpace(operation, opMaxLength)
 		}
+		updatedAt := timeFormatter(field.Time.Time)
+		if len(updatedAt) < timeMaxLength {
+			updatedAt = prependSpace(updatedAt, timeMaxLength)
+		}
 		info := ManagerInfo{
 			Manager:   manager,
 			Operation: operation,
-			Time:      field.Time,
+			Time:      updatedAt,
 		}
+		infoLength = len(info.String())
 
 		s, err := fieldsToSet(*field.FieldsV1)
 		if err != nil {
@@ -152,11 +188,15 @@ func buildTree(managedFields []metav1.ManagedFieldsEntry, mgrMaxLength, opMaxLen
 			return nil, errors.NewAggregate(errList)
 		}
 	}
+	m.emptyInfo = strings.Repeat(" ", infoLength)
 	return root, nil
 }
 
-func MarshalMetaObject(obj metav1.Object) ([]byte, error) {
-	var m Marshaller
+func MarshalMetaObject(obj metav1.Object, timeFmt string) ([]byte, error) {
+	m := Marshaller{
+		now:        time.Now(),
+		timeFormat: timeFmt,
+	}
 	return m.marshalMetaObject(obj)
 }
 
@@ -166,8 +206,9 @@ func (m *Marshaller) marshalMetaObject(obj metav1.Object) ([]byte, error) {
 		return nil, fmt.Errorf(".metadata.managedFields is empty")
 	}
 
+	relativeTime := m.timeFormat == TimeFormatRelative
 	var (
-		mgrMaxLength, opMaxLength int
+		mgrMaxLength, opMaxLength, timeMaxLength int
 	)
 	for _, field := range managedFields {
 		if len(field.Manager) > mgrMaxLength {
@@ -176,16 +217,22 @@ func (m *Marshaller) marshalMetaObject(obj metav1.Object) ([]byte, error) {
 		if len(field.Operation) > opMaxLength {
 			opMaxLength = len(field.Operation)
 		}
+
+		if relativeTime {
+			d := humanDuration(m.now.Sub(field.Time.Time))
+			if len(d) > timeMaxLength {
+				timeMaxLength = len(d)
+			}
+		}
+	}
+	if m.timeFormat == TimeFormatFull {
+		timeMaxLength = len(timeLayout)
 	}
 
-	root, err := buildTree(managedFields, mgrMaxLength, opMaxLength)
+	root, err := m.buildTree(managedFields, mgrMaxLength, opMaxLength, timeMaxLength)
 	if err != nil {
 		return nil, err
 	}
-
-	// manager + space + bracket + operation + space + time + bracket + space
-	infoLength := mgrMaxLength + 1 + 1 + opMaxLength + 1 + len(timeLayout) + 1 + 1
-	m.emptyInfo = strings.Repeat(" ", infoLength)
 
 	obj.SetManagedFields(nil)
 	unsObj, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
