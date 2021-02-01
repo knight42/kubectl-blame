@@ -23,8 +23,13 @@ install:
 gz_releases=$(addsuffix .tar.gz, $(PLATFORM_LIST))
 
 $(gz_releases): %.tar.gz : %
-	tar czf $(NAME)-$(VERSION)-$@ $(NAME)-$(VERSION)-$</
+	tar czf $(NAME)-$(VERSION)-$@ -C $(NAME)-$(VERSION)-$</ ../LICENSE $(NAME)
+   
+sha256_releases=$(addsuffix .tar.gz.sha256, $(PLATFORM_LIST))
 
-releases: $(gz_releases)
+$(sha256_releases): %.sha256 : %
+	shasum -a 256 $(NAME)-$(VERSION)-$< > $(NAME)-$(VERSION)-$@ 
+
+releases: $(gz_releases) $(sha256_releases)
 clean:
 	rm -r $(NAME)-*
