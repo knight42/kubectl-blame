@@ -8,6 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/resource"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 type Options struct {
@@ -19,7 +20,7 @@ type Options struct {
 }
 
 var (
-	blameLong = `Annotate each line in the given resource's YAML with information from the managedFields 
+	blameLong = `Annotate each line in the given resource's YAML with information from the managedFields
 to show who last modified the field.
 
 As long as the field '.metadata.manageFields' of the given resource is set properly, this command
@@ -48,7 +49,7 @@ func NewCmdBlame() *cobra.Command {
 	o := Options{}
 	f := genericclioptions.NewConfigFlags(true)
 	cmd := &cobra.Command{
-		Use:                   "blame TYPE[.VERSION][.GROUP] NAME",
+		Use:                   "kubectl blame TYPE[.VERSION][.GROUP] NAME",
 		DisableFlagsInUseLine: true,
 		Short:                 "Show the manager of each field of given resource",
 		Long:                  blameLong,
