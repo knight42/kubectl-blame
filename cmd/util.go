@@ -53,7 +53,7 @@ func onlyContainsNewline(s string) (onlyNewline bool) {
 			return false
 		}
 	}
-	return sawNewline == true
+	return sawNewline
 }
 
 func toYAMLStringValueln(prefix, s string, lvl int) string {
