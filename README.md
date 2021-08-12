@@ -11,12 +11,10 @@ is able to display the manager of each field.
 
 ## Installing
 
-```bash
-VERSION=0.0.4
-curl -o kubectl-blame.tar.gz -Lf https://github.com/knight42/kubectl-blame/releases/download/v${VERSION}/kubectl-blame-v${VERSION}-$(go env GOOS)-amd64.tar.gz
-tar xf kubectl-blame.tar.gz
-cp kubectl-blame $GOPATH/bin/
-```
+| Distribution                           | Command / Link                                                         |
+|----------------------------------------|------------------------------------------------------------------------|
+| [Krew](https://krew.sigs.k8s.io/)      | `kubectl krew install blame`                                           |
+| Pre-built binaries for macOS, Linux    | [GitHub releases](https://github.com/knight42/kubectl-blame/releases)  |
 
 ## Demos
 
