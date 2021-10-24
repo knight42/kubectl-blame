@@ -136,27 +136,32 @@ func writeIndent(w io.Writer, lvl int) error {
 }
 
 func appendSpace(s string, totalLen int) string {
-	var b strings.Builder
-	b.Grow(totalLen)
-	b.WriteString(s)
-	n := totalLen - len(s)
-	for i := 0; i < n; i++ {
-		b.WriteByte(' ')
-	}
-	return b.String()
+	return addSpace(s, totalLen, false)
 }
 
 func prependSpace(s string, totalLen int) string {
+	return addSpace(s, totalLen, true)
+}
+
+func addSpace(s string, totalLen int, front bool) string {
 	if len(s) >= totalLen {
 		return s
 	}
+
 	var b strings.Builder
 	b.Grow(totalLen)
 	n := totalLen - len(s)
-	for i := 0; i < n; i++ {
-		b.WriteByte(' ')
+	if front {
+		for i := 0; i < n; i++ {
+			b.WriteByte(' ')
+		}
+		b.WriteString(s)
+	} else {
+		b.WriteString(s)
+		for i := 0; i < n; i++ {
+			b.WriteByte(' ')
+		}
 	}
-	b.WriteString(s)
 	return b.String()
 }
 

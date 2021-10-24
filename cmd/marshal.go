@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
@@ -36,11 +37,6 @@ type Marshaller struct {
 	timeFormat string
 }
 
-type KeyWithNode struct {
-	Node *Node
-	Key  value.FieldList
-}
-
 type ManagerInfo struct {
 	Manager   string
 	Operation string
@@ -54,67 +50,43 @@ func (i *ManagerInfo) String() string {
 	return fmt.Sprintf("%s %s ", i.Manager, i.Operation)
 }
 
+type KeyWithNode struct {
+	Node *Node
+	Key  value.FieldList
+}
+
+type ValueWithNode struct {
+	Node  *Node
+	Value value.Value
+}
+
 type Node struct {
 	// field name -> child node
 	Fields map[string]*Node
 	// fieldList ID -> {fieldList, child node}
-	Keys   map[string]*KeyWithNode
+	Keys map[string]*KeyWithNode
+	// value ID -> {value, child node}
+	Values map[string]*ValueWithNode
+
 	Parent *Node
 
 	Info *ManagerInfo
 }
 
-func (n *Node) print(lvl int, infoLength int) {
-	var keys []string
-	for key := range n.Fields {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		child := n.Fields[key]
-		if child.Info != nil {
-			fmt.Printf("%s", child.Info.String())
-		} else {
-			fmt.Print(strings.Repeat(" ", infoLength))
-		}
-		fmt.Print(strings.Repeat("  ", lvl))
-		fmt.Printf(" f:%s\n", key)
-		child.print(lvl+1, infoLength)
-	}
-
-	keys = keys[:0]
-	for key := range n.Keys {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for _, key := range keys {
-		s := n.Keys[key]
-		child := s.Node
-		if child.Info != nil {
-			fmt.Printf("%s", child.Info.String())
-		} else {
-			fmt.Print(strings.Repeat(" ", infoLength))
-		}
-		fmt.Print(strings.Repeat("  ", lvl))
-		fmt.Printf(" k:%s\n", fieldListID(s.Key))
-		child.print(lvl+1, infoLength)
-	}
-}
-
 func (m *Marshaller) buildTree(managedFields []metav1.ManagedFieldsEntry, mgrMaxLength, opMaxLength, timeMaxLength int) (*Node, error) {
 	root := &Node{}
-	var timeFormatter func(time time.Time) string
+	var timeFormatter func(*metav1.Time) string
 	switch m.timeFormat {
 	case TimeFormatFull:
-		timeFormatter = func(t time.Time) string {
+		timeFormatter = func(t *metav1.Time) string {
 			return t.Format(timeLayout)
 		}
 	case TimeFormatRelative:
-		timeFormatter = func(t time.Time) string {
-			return humanDuration(m.now.Sub(t))
+		timeFormatter = func(t *metav1.Time) string {
+			return humanDuration(m.now.Sub(t.Time))
 		}
 	case TimeFormatNone:
-		timeFormatter = func(t time.Time) string {
+		timeFormatter = func(t *metav1.Time) string {
 			return ""
 		}
 	default:
@@ -125,16 +97,9 @@ func (m *Marshaller) buildTree(managedFields []metav1.ManagedFieldsEntry, mgrMax
 	for _, field := range managedFields {
 		manager := field.Manager
 		operation := string(field.Operation)
-		if len(manager) < mgrMaxLength {
-			manager = appendSpace(manager, mgrMaxLength)
-		}
-		if len(operation) < opMaxLength {
-			operation = appendSpace(operation, opMaxLength)
-		}
-		updatedAt := timeFormatter(field.Time.Time)
-		if len(updatedAt) < timeMaxLength {
-			updatedAt = prependSpace(updatedAt, timeMaxLength)
-		}
+		manager = appendSpace(manager, mgrMaxLength)
+		operation = appendSpace(operation, opMaxLength)
+		updatedAt := prependSpace(timeFormatter(field.Time), timeMaxLength)
 		info := ManagerInfo{
 			Manager:   manager,
 			Operation: operation,
@@ -175,8 +140,21 @@ func (m *Marshaller) buildTree(managedFields []metav1.ManagedFieldsEntry, mgrMax
 						}
 					}
 					cur = cur.Keys[name].Node
+				case ele.Value != nil:
+					name := value.ToString(*ele.Value)
+					if cur.Values == nil {
+						cur.Values = map[string]*ValueWithNode{}
+					}
+					if cur.Values[name] == nil {
+						cur.Values[name] = &ValueWithNode{
+							Value: *ele.Value,
+							Node:  &Node{Parent: cur},
+						}
+					}
+					cur = cur.Values[name].Node
 				default:
-					errList = append(errList, fmt.Errorf("unknown element: %#v", ele))
+					data, _ := json.Marshal(ele)
+					errList = append(errList, fmt.Errorf("unknown element: %s", string(data)))
 					continue
 				}
 				if isLeaf {
@@ -348,10 +326,11 @@ func (m *Marshaller) marshalListWithCtx(ctx Context, o []interface{}, w io.Write
 			for _, s := range root.Keys {
 				if fieldListMatchObject(s.Key, actual) {
 					child = s.Node
+					break
 				}
 			}
-			prefix := getInfoOr(child, m.emptyInfo)
-			writeString(w, prefix)
+			mapPrefix := getInfoOr(child, m.emptyInfo)
+			writeString(w, mapPrefix)
 			writeIndent(w, ctx.Level)
 			writeBytes(w, '-', ' ')
 			m.marshalMapWithCtx(Context{
@@ -370,7 +349,14 @@ func (m *Marshaller) marshalListWithCtx(ctx Context, o []interface{}, w io.Write
 			continue
 		}
 
-		writeString(w, prefix)
+		valPrefix := prefix
+		if root.Values != nil {
+			s := value.ToString(value.NewValueInterface(val))
+			if v, ok := root.Values[s]; ok {
+				valPrefix = getInfoOr(v.Node, m.emptyInfo)
+			}
+		}
+		writeString(w, valPrefix)
 		writeIndent(w, ctx.Level)
 		writeBytes(w, '-', ' ')
 		switch actual := val.(type) {
