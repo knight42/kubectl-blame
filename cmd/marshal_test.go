@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/structured-merge-diff/v4/fieldpath"
@@ -12,7 +13,6 @@ import (
 )
 
 type M = map[string]interface{}
-type L = []interface{}
 
 func TestFieldListMatchObject(t *testing.T) {
 	testCases := []struct {
@@ -61,6 +61,10 @@ func TestFieldListMatchObject(t *testing.T) {
 func TestMarshaller_MarshalMetaObject(t *testing.T) {
 	now := metav1.NewTime(time.Unix(1606150365, 0).UTC())
 	s1 := fieldpath.NewSet(
+		fieldpath.MakePathOrDie("metadata", "finalizers"),
+		fieldpath.MakePathOrDie("metadata", "finalizers",
+			value.NewValueInterface("service.kubernetes.io/load-balancer-cleanup"),
+		),
 		fieldpath.MakePathOrDie("metadata", "labels"),
 		fieldpath.MakePathOrDie("metadata", "labels", "app"),
 		fieldpath.MakePathOrDie("metadata", "ownerReferences"),
@@ -77,6 +81,9 @@ func TestMarshaller_MarshalMetaObject(t *testing.T) {
 	)
 
 	s2 := fieldpath.NewSet(
+		fieldpath.MakePathOrDie("metadata", "finalizers",
+			value.NewValueInterface("service.kubernetes.io/foo"),
+		),
 		fieldpath.MakePathOrDie("spec", "containers",
 			fieldpath.KeyByFields("name", "c1")),
 		fieldpath.MakePathOrDie("spec", "containers",
@@ -146,6 +153,10 @@ func TestMarshaller_MarshalMetaObject(t *testing.T) {
 				"app":     "bar",
 				"version": "v1",
 			},
+			Finalizers: []string{
+				"service.kubernetes.io/load-balancer-cleanup",
+				"service.kubernetes.io/foo",
+			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					UID:  "72594682-7b8d-4d52-bb84-8cab3cd2e16f",
@@ -178,6 +189,9 @@ func TestMarshaller_MarshalMetaObject(t *testing.T) {
 
 	const expected = `                                      metadata:
                                         creationTimestamp: null
+m1 (Update 2020-11-23 16:52:45 +0000)   finalizers:
+m1 (Update 2020-11-23 16:52:45 +0000)   - service.kubernetes.io/load-balancer-cleanup
+m2 (Update 2020-11-23 16:52:45 +0000)   - service.kubernetes.io/foo
 m1 (Update 2020-11-23 16:52:45 +0000)   labels:
 m1 (Update 2020-11-23 16:52:45 +0000)     app: bar
 m1 (Update 2020-11-23 16:52:45 +0000)     version: v1
@@ -205,4 +219,90 @@ m2 (Update 2020-11-23 16:52:45 +0000)     resources: {}
 		t.Fatal(err)
 	}
 	assert.Equal(t, expected, string(data))
+}
+
+func TestBuildTree(t *testing.T) {
+	s1 := fieldpath.NewSet(
+		fieldpath.MakePathOrDie("metadata", "finalizers"),
+		fieldpath.MakePathOrDie("metadata", "finalizers",
+			value.NewValueInterface("service.kubernetes.io/load-balancer-cleanup"),
+		),
+	)
+	s2 := fieldpath.NewSet(
+		fieldpath.MakePathOrDie("metadata", "finalizers",
+			value.NewValueInterface("service.kubernetes.io/foo"),
+		),
+	)
+
+	f1, _ := s1.ToJSON()
+	f2, _ := s2.ToJSON()
+
+	m := Marshaller{
+		now:        time.Now(),
+		timeFormat: TimeFormatNone,
+	}
+	r := require.New(t)
+	root, err := m.buildTree([]metav1.ManagedFieldsEntry{
+		{
+			Manager:   "m1",
+			Operation: metav1.ManagedFieldsOperationApply,
+			FieldsV1: &metav1.FieldsV1{
+				Raw: f1,
+			},
+		},
+		{
+			Manager:   "m2",
+			Operation: metav1.ManagedFieldsOperationUpdate,
+			FieldsV1: &metav1.FieldsV1{
+				Raw: f2,
+			},
+		},
+	}, 0, 0, 0)
+	r.NoError(err)
+
+	leaf1 := &Node{
+		Info: &ManagerInfo{
+			Manager:   "m1",
+			Operation: string(metav1.ManagedFieldsOperationApply),
+		},
+	}
+	leaf2 := &Node{
+		Info: &ManagerInfo{
+			Manager:   "m2",
+			Operation: string(metav1.ManagedFieldsOperationUpdate),
+		},
+	}
+	node1 := &Node{
+		Values: map[string]*ValueWithNode{
+			`"service.kubernetes.io/load-balancer-cleanup"`: {
+				Value: value.NewValueInterface("service.kubernetes.io/load-balancer-cleanup"),
+				Node:  leaf1,
+			},
+			`"service.kubernetes.io/foo"`: {
+				Value: value.NewValueInterface("service.kubernetes.io/foo"),
+				Node:  leaf2,
+			},
+		},
+		Info: &ManagerInfo{
+			Manager:   "m1",
+			Operation: string(metav1.ManagedFieldsOperationApply),
+		},
+	}
+	leaf1.Parent, leaf2.Parent = node1, node1
+
+	node2 := &Node{
+		Fields: map[string]*Node{
+			"finalizers": node1,
+		},
+	}
+	node1.Parent = node2
+
+	expected := &Node{
+		Fields: map[string]*Node{
+			"metadata": node2,
+		},
+	}
+	node2.Parent = expected
+
+	r.Equal(expected, root)
 }
