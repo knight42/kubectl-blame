@@ -1,6 +1,10 @@
 kubectl-blame: git-like blame for kubectl
 ======
 
+![GitHub](https://img.shields.io/github/license/knight42/kubectl-blame)
+![](https://github.com/knight42/kubectl-blame/actions/workflows/build.yml/badge.svg)
+![GitHub last commit](https://img.shields.io/github/last-commit/knight42/kubectl-blame)
+
 Annotate each line in the given resource's YAML with information from the managedFields
 to show who last modified the field.
 
