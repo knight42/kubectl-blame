@@ -5,15 +5,17 @@ GOBUILD=CGO_ENABLED=0 go build -trimpath -ldflags $(GO_LDFLAGS)
 
 PLATFORM_LIST = \
 	darwin-amd64 \
-	linux-amd64
+	darwin-arm64 \
+	linux-amd64 \
+	linux-arm64
 
-all: linux-amd64 darwin-amd64 # Most used
+all: linux-amd64 linux-arm64 darwin-amd64 darwin-arm64 # Most used
 
-darwin-amd64:
-	GOARCH=amd64 GOOS=darwin $(GOBUILD) -o $(NAME)-$(VERSION)-$@/$(NAME)
+darwin-%:
+	GOARCH=$* GOOS=darwin $(GOBUILD) -o $(NAME)-$(VERSION)-$@/$(NAME)
 
-linux-amd64:
-	GOARCH=amd64 GOOS=linux $(GOBUILD) -o $(NAME)-$(VERSION)-$@/$(NAME)
+linux-%:
+	GOARCH=$* GOOS=linux $(GOBUILD) -o $(NAME)-$(VERSION)-$@/$(NAME)
 
 all-arch: $(PLATFORM_LIST) $(WINDOWS_ARCH_LIST)
 
