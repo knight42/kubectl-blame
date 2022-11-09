@@ -1,5 +1,10 @@
 name: Cross Platform Build
-on: [push, pull_request]
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  push:
+    tags:
+      - v*
 jobs:
   build:
     name: Build
