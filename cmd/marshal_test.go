@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,6 +59,7 @@ func TestFieldListMatchObject(t *testing.T) {
 }
 
 func TestMarshaller_MarshalMetaObject(t *testing.T) {
+	r := require.New(t)
 	now := metav1.NewTime(time.Unix(1606150365, 0).UTC())
 	s1 := fieldpath.NewSet(
 		fieldpath.MakePathOrDie("metadata", "finalizers"),
@@ -123,9 +124,14 @@ func TestMarshaller_MarshalMetaObject(t *testing.T) {
 			"protocol"),
 	)
 
+	s4 := fieldpath.NewSet(
+		fieldpath.MakePathOrDie("metadata", "labels", "s4"),
+	)
+
 	f1, _ := s1.ToJSON()
 	f2, _ := s2.ToJSON()
 	f3, _ := s3.ToJSON()
+	f4, _ := s4.ToJSON()
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -148,10 +154,16 @@ func TestMarshaller_MarshalMetaObject(t *testing.T) {
 					Time:      &now,
 					FieldsV1:  &metav1.FieldsV1{Raw: f3},
 				},
+				{
+					Manager:   "m4",
+					Operation: metav1.ManagedFieldsOperationUpdate,
+					FieldsV1:  &metav1.FieldsV1{Raw: f4},
+				},
 			},
 			Labels: map[string]string{
 				"app":     "bar",
 				"version": "v1",
+				"s4":      "v",
 			},
 			Finalizers: []string{
 				"service.kubernetes.io/load-balancer-cleanup",
@@ -194,6 +206,7 @@ m1 (Update 2020-11-23 16:52:45 +0000)   - service.kubernetes.io/load-balancer-cl
 m2 (Update 2020-11-23 16:52:45 +0000)   - service.kubernetes.io/foo
 m1 (Update 2020-11-23 16:52:45 +0000)   labels:
 m1 (Update 2020-11-23 16:52:45 +0000)     app: bar
+m4 (Update                          )     s4: v
 m1 (Update 2020-11-23 16:52:45 +0000)     version: v1
 m1 (Update 2020-11-23 16:52:45 +0000)   ownerReferences:
 m1 (Update 2020-11-23 16:52:45 +0000)   - apiVersion: ""
@@ -215,10 +228,10 @@ m2 (Update 2020-11-23 16:52:45 +0000)     resources: {}
                                       status: {}
 `
 	data, err := MarshalMetaObject(pod, TimeFormatFull)
-	if err != nil {
-		t.Fatal(err)
+	r.NoError(err)
+	if diff := cmp.Diff(expected, string(data)); len(diff) > 0 {
+		t.Errorf("unexpected diff (-want +got): %s", diff)
 	}
-	assert.Equal(t, expected, string(data))
 }
 
 func TestBuildTree(t *testing.T) {
