@@ -79,10 +79,16 @@ func (m *Marshaller) buildTree(managedFields []metav1.ManagedFieldsEntry, mgrMax
 	switch m.timeFormat {
 	case TimeFormatFull:
 		timeFormatter = func(t *metav1.Time) string {
+			if t == nil {
+				return ""
+			}
 			return t.Format(timeLayout)
 		}
 	case TimeFormatRelative:
 		timeFormatter = func(t *metav1.Time) string {
+			if t == nil {
+				return ""
+			}
 			return humanDuration(m.now.Sub(t.Time))
 		}
 	case TimeFormatNone:
@@ -196,7 +202,7 @@ func (m *Marshaller) marshalMetaObject(obj metav1.Object) ([]byte, error) {
 			opMaxLength = len(field.Operation)
 		}
 
-		if relativeTime {
+		if relativeTime && field.Time != nil {
 			d := humanDuration(m.now.Sub(field.Time.Time))
 			if len(d) > timeMaxLength {
 				timeMaxLength = len(d)
