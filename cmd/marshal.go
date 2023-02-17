@@ -70,7 +70,7 @@ type Node struct {
 
 	Parent *Node
 
-	Info *ManagerInfo
+	Managers []ManagerInfo
 }
 
 func (m *Marshaller) buildTree(managedFields []metav1.ManagedFieldsEntry, mgrMaxLength, opMaxLength, timeMaxLength int) (*Node, error) {
@@ -164,7 +164,7 @@ func (m *Marshaller) buildTree(managedFields []metav1.ManagedFieldsEntry, mgrMax
 					continue
 				}
 				if isLeaf {
-					cur.Info = &info
+					cur.Managers = append(cur.Managers, info)
 				}
 			}
 		})

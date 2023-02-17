@@ -79,12 +79,14 @@ func TestMarshaller_MarshalMetaObject(t *testing.T) {
 			fieldpath.KeyByFields("uid", "72594682-7b8d-4d52-bb84-8cab3cd2e16f"),
 			"apiVersion",
 		),
+		fieldpath.MakePathOrDie("spec", "serviceAccountName"),
 	)
 
 	s2 := fieldpath.NewSet(
 		fieldpath.MakePathOrDie("metadata", "finalizers",
 			value.NewValueInterface("service.kubernetes.io/foo"),
 		),
+		fieldpath.MakePathOrDie("spec", "serviceAccountName"),
 		fieldpath.MakePathOrDie("spec", "containers",
 			fieldpath.KeyByFields("name", "c1")),
 		fieldpath.MakePathOrDie("spec", "containers",
@@ -178,6 +180,7 @@ func TestMarshaller_MarshalMetaObject(t *testing.T) {
 			},
 		},
 		Spec: corev1.PodSpec{
+			ServiceAccountName: "foo",
 			Containers: []corev1.Container{
 				{
 					Name:  "c1",
@@ -225,6 +228,8 @@ m3 (Update 2020-11-23 16:52:45 +0000)     - containerPort: 53
 m3 (Update 2020-11-23 16:52:45 +0000)       name: udp
 m3 (Update 2020-11-23 16:52:45 +0000)       protocol: UDP
 m2 (Update 2020-11-23 16:52:45 +0000)     resources: {}
+m1 (Update 2020-11-23 16:52:45 +0000) /
+m2 (Update 2020-11-23 16:52:45 +0000)   serviceAccountName: foo
                                       status: {}
 `
 	data, err := MarshalMetaObject(pod, TimeFormatFull)
@@ -274,15 +279,19 @@ func TestBuildTree(t *testing.T) {
 	r.NoError(err)
 
 	leaf1 := &Node{
-		Info: &ManagerInfo{
-			Manager:   "m1",
-			Operation: string(metav1.ManagedFieldsOperationApply),
+		Managers: []ManagerInfo{
+			{
+				Manager:   "m1",
+				Operation: string(metav1.ManagedFieldsOperationApply),
+			},
 		},
 	}
 	leaf2 := &Node{
-		Info: &ManagerInfo{
-			Manager:   "m2",
-			Operation: string(metav1.ManagedFieldsOperationUpdate),
+		Managers: []ManagerInfo{
+			{
+				Manager:   "m2",
+				Operation: string(metav1.ManagedFieldsOperationUpdate),
+			},
 		},
 	}
 	node1 := &Node{
@@ -296,9 +305,11 @@ func TestBuildTree(t *testing.T) {
 				Node:  leaf2,
 			},
 		},
-		Info: &ManagerInfo{
-			Manager:   "m1",
-			Operation: string(metav1.ManagedFieldsOperationApply),
+		Managers: []ManagerInfo{
+			{
+				Manager:   "m1",
+				Operation: string(metav1.ManagedFieldsOperationApply),
+			},
 		},
 	}
 	leaf1.Parent, leaf2.Parent = node1, node1

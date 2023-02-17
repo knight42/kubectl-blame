@@ -17,8 +17,15 @@ import (
 
 func getInfoOr(n *Node, defVal string) string {
 	for n != nil {
-		if n.Info != nil {
-			return n.Info.String()
+		if len(n.Managers) > 0 {
+			var buf strings.Builder
+			for i, info := range n.Managers {
+				if i > 0 {
+					buf.WriteString("/\n")
+				}
+				buf.WriteString(info.String())
+			}
+			return buf.String()
 		}
 		n = n.Parent
 	}
