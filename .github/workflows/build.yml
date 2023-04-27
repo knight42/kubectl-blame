@@ -1,4 +1,4 @@
-name: Cross Platform Build
+name: Build & Release
 on:
   pull_request:
     types: [opened, reopened, synchronize]
@@ -15,10 +15,9 @@ jobs:
       id: checkout
 
     - name: Set up Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
-        go-version: 1.19
-        cache: true
+        go-version: 1.20
 
     - name: Get dependencies and run test
       run: make test
