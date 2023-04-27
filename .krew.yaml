@@ -34,3 +34,9 @@ spec:
         arch: arm64
     {{addURIAndSha "https://github.com/knight42/kubectl-blame/releases/download/{{ .TagName }}/kubectl-blame-{{ .TagName }}-linux-arm64.tar.gz" .TagName }}
     bin: kubectl-blame
+  - selector:
+      matchLabels:
+        os: windows
+        arch: amd64
+    {{addURIAndSha "https://github.com/knight42/kubectl-blame/releases/download/{{ .TagName }}/kubectl-blame-{{ .TagName }}-windows-amd64.tar.gz" .TagName }}
+    bin: kubectl-blame.exe
