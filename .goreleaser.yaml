@@ -18,7 +18,7 @@ builds:
       - all=-trimpath
 archives:
   -
-    name_template: '{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    name_template: '{{ .ProjectName }}-v{{ .Version }}-{{ .Os }}-{{ .Arch }}'
 checksum:
   name_template: 'checksums.txt'
 snapshot:
