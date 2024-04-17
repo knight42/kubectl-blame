@@ -145,11 +145,20 @@ func (o *Options) visitClusterObjects(visit func(object metav1.Object) error) er
 		if err != nil {
 			return err
 		}
-		obj, ok := info.Object.(metav1.Object)
-		if !ok {
+
+		switch obj := info.Object.(type) {
+		case metav1.Object:
+			return visit(obj)
+		case *unstructured.UnstructuredList:
+			for _, item := range obj.Items {
+				if err := visit(&item); err != nil {
+					return err
+				}
+			}
+			return nil
+		default:
 			return fmt.Errorf("unsupported object: %v: %s/%s", info.Mapping.Resource, info.Namespace, info.Name)
 		}
-		return visit(obj)
 	})
 }
 
