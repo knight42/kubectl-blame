@@ -11,7 +11,7 @@ require (
 	k8s.io/cli-runtime v0.27.1
 	k8s.io/client-go v0.27.1
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3
-	sigs.k8s.io/yaml v1.3.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
