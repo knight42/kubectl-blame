@@ -1,9 +1,10 @@
 module github.com/knight42/kubectl-blame
 
 go 1.20
+toolchain go1.24.1
 
 require (
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	k8s.io/api v0.27.1
