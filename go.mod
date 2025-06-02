@@ -1,6 +1,7 @@
 module github.com/knight42/kubectl-blame
 
-go 1.20
+go 1.23.0
+
 toolchain go1.24.1
 
 require (
@@ -11,7 +12,7 @@ require (
 	k8s.io/apimachinery v0.27.1
 	k8s.io/cli-runtime v0.27.1
 	k8s.io/client-go v0.27.1
-	sigs.k8s.io/structured-merge-diff/v4 v4.5.0
+	sigs.k8s.io/structured-merge-diff/v4 v4.7.0
 	sigs.k8s.io/yaml v1.4.0
 )
 
