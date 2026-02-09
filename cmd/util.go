@@ -172,6 +172,16 @@ func addSpace(s string, totalLen int, front bool) string {
 	return b.String()
 }
 
+func firstSortedMapKey(o map[string]interface{}) string {
+	var min string
+	for k := range o {
+		if min == "" || k < min {
+			min = k
+		}
+	}
+	return min
+}
+
 func fieldListMatchObject(fl value.FieldList, o map[string]interface{}) bool {
 	for _, field := range fl {
 		i, exist := o[field.Name]

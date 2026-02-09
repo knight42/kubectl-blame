@@ -52,6 +52,9 @@ func TestBlameLocalFile(t *testing.T) {
 		"json": {
 			inputFile: "deploy.json",
 		},
+		"multi-manager-list-item": {
+			inputFile: "multi-manager-list-item.yaml",
+		},
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {

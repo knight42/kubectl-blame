@@ -256,12 +256,11 @@ func (m *Marshaller) marshalMapWithCtx(ctx Context, o map[string]interface{}, w 
 	root := ctx.Node
 	for i, key := range keys {
 		val := o[key]
-		var child *Node
+		child := root.Fields[key]
 		if i == 0 && !ctx.NewLine {
 			writeString(w, toYAMLString(key))
 		} else {
-			var ok bool
-			child, ok = root.Fields[key]
+			ok := child != nil
 			if ok {
 				info := getInfoOr(child, m.emptyInfo)
 				writeString(w, info)
@@ -336,6 +335,12 @@ func (m *Marshaller) marshalListWithCtx(ctx Context, o []interface{}, w io.Write
 				}
 			}
 			mapPrefix := getInfoOr(child, m.emptyInfo)
+			if len(actual) > 0 {
+				firstKey := firstSortedMapKey(actual)
+				if fc := child.Fields[firstKey]; fc != nil {
+					mapPrefix = getInfoOr(fc, m.emptyInfo)
+				}
+			}
 			writeString(w, mapPrefix)
 			writeIndent(w, ctx.Level)
 			writeBytes(w, '-', ' ')
