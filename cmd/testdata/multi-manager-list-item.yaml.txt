@@ -1,0 +1,16 @@
+                               apiVersion: apps/v1
+                               kind: Deployment
+                               metadata: {}
+                               spec:
+                                 template:
+                                   spec:
+                                     containers:
+envpatcher              Update       - env:
+envpatcher              Update         - name: barx
+envpatcher              Update           value: bar
+me                      Update         image: nginx:1.14.2
+me                      Update         imagePullPolicy: IfNotPresent
+me                      Update         name: nginx
+me                      Update         ports:
+me                      Update         - containerPort: 80
+me                      Update           protocol: TCP
