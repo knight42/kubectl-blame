@@ -48,8 +48,8 @@ kubectl blame -f pod.yaml
 
 # Blame deployment saved in local file 'deployment.yaml'(will NOT access remote server)
 kubectl blame -i deployment.yaml
-# Or
-cat deployment.yaml | kubectl blame -i -
+# Or pipe from stdin (auto-detected)
+cat deployment.yaml | kubectl blame
 `
 )
 
@@ -79,7 +79,7 @@ func NewCmdBlame() *cobra.Command {
 	f.AddFlags(flags)
 	flags.StringVar(&o.timeFormat, "time", TimeFormatRelative, "Time format. One of: full|relative|none.")
 	flags.StringSliceVarP(&o.fileNameOpts.Filenames, "filename", "f", o.fileNameOpts.Filenames, "Filename identifying the resource to get from a server.")
-	flags.StringVarP(&o.inputFile, "input", "i", "", "Read object from the give file. When the file is -, read standard input.")
+	flags.StringVarP(&o.inputFile, "input", "i", "auto", "Read object from the given file. When set to 'auto', automatically read from stdin if piped. Use '-' to force reading from stdin.")
 	return cmd
 }
 
@@ -101,7 +101,7 @@ func (o *Options) Validate() error {
 func (o *Options) visitLocalObjects(visit func(object metav1.Object) error) error {
 	// get objects from stdin or local files
 	var input io.Reader
-	if o.inputFile == "-" {
+	if o.inputFile == "-" || o.inputFile == "auto" {
 		input = os.Stdin
 	} else {
 		f, err := os.Open(o.inputFile)
@@ -166,6 +166,13 @@ func (o *Options) Run() error {
 	enc := newEncoder(o.out, func(obj metav1.Object) ([]byte, error) {
 		return MarshalMetaObject(obj, o.timeFormat)
 	})
+
+	if o.inputFile == "auto" {
+		if stat, err := os.Stdin.Stat(); err == nil && (stat.Mode()&os.ModeCharDevice) == 0 {
+			return o.visitLocalObjects(enc.Encode)
+		}
+		return o.visitClusterObjects(enc.Encode)
+	}
 
 	if len(o.inputFile) == 0 {
 		return o.visitClusterObjects(enc.Encode)

@@ -37,8 +37,8 @@ kubectl blame -f pod.yaml
 
 # Blame deployment saved in local file 'deployment.yaml'(will NOT access remote server)
 kubectl blame -i deployment.yaml
-# Or
-cat deployment.yaml | kubectl blame -i -
+# Or pipe from stdin (auto-detected)
+cat deployment.yaml | kubectl blame
 ```
 
 ### Flags
@@ -47,4 +47,4 @@ cat deployment.yaml | kubectl blame -i -
 |--------------------|------------|--------------------------------------------------------------------------|
 | `--time`           | `relative` | Time format. One of: `full`, `relative`, `none`.                         |
 | `--filename`, `-f` |            | Filename identifying the resource to get from a server.                  |
-| `--input`, `-i`    |            | Read object from the give file. When the file is -, read standard input. |
+| `--input`, `-i`    | `auto`     | Read object from the given file. When set to `auto`, automatically read from stdin if piped. Use `-` to force reading from stdin. |

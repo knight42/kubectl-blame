@@ -9,6 +9,39 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestBlameAutoStdin(t *testing.T) {
+	r := require.New(t)
+
+	// Read test input and expected output
+	inputData, err := os.ReadFile(filepath.Join("testdata", "deploy.yaml"))
+	r.NoError(err)
+	expected, err := os.ReadFile(filepath.Join("testdata", "deploy.yaml.txt"))
+	r.NoError(err)
+
+	// Create a pipe to simulate piped stdin
+	pr, pw, err := os.Pipe()
+	r.NoError(err)
+
+	_, err = pw.Write(inputData)
+	r.NoError(err)
+	pw.Close()
+
+	// Swap os.Stdin with the pipe
+	oldStdin := os.Stdin
+	os.Stdin = pr
+	t.Cleanup(func() { os.Stdin = oldStdin })
+
+	var buf bytes.Buffer
+	opts := &Options{
+		inputFile:  "auto",
+		timeFormat: TimeFormatNone,
+		out:        &buf,
+	}
+	err = opts.Run()
+	r.NoError(err)
+	r.Equal(string(expected), buf.String())
+}
+
 func TestBlameLocalFile(t *testing.T) {
 	testCases := map[string]struct {
 		inputFile string
