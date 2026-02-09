@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func getInfoOr(n *Node, defVal string) string {
+func getInfoOr(n *Node, defVal string, colorizer *Colorizer) string {
 	for n != nil {
 		if len(n.Managers) > 0 {
 			var buf strings.Builder
@@ -23,7 +23,11 @@ func getInfoOr(n *Node, defVal string) string {
 				if i > 0 {
 					buf.WriteString("/\n")
 				}
-				buf.WriteString(info.String())
+				s := info.String()
+				if colorizer != nil {
+					s = colorizer.Sprint(strings.TrimSpace(info.Manager), s)
+				}
+				buf.WriteString(s)
 			}
 			return buf.String()
 		}
