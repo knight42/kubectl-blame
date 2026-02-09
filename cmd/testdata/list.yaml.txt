@@ -1,0 +1,194 @@
+                                 apiVersion: apps/v1
+                                 kind: Deployment
+                                 metadata:
+kube-controller-manager   Update   annotations:
+kube-controller-manager   Update     deployment.kubernetes.io/revision: "1"
+kubectl-client-side-apply Update     kubectl.kubernetes.io/last-applied-configuration: |
+                                       {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"deployment.kubernetes.io/revision":"1"},"creationTimestamp":"2021-11-12T11:13:20Z","generation":1,"labels":{"app":"iperf"},"name":"iperf","namespace":"default","resourceVersion":"2766191","uid":"79c2b12c-70e2-4207-b5e8-4a19bf049326"},"spec":{"progressDeadlineSeconds":600,"replicas":2,"revisionHistoryLimit":10,"selector":{"matchLabels":{"app":"iperf"}},"strategy":{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"25%"},"type":"RollingUpdate"},"template":{"metadata":{"creationTimestamp":null,"labels":{"app":"iperf"}},"spec":{"containers":[{"image":"knight42/iperf:latest","imagePullPolicy":"Always","name":"iperf","resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30}}},"status":{"availableReplicas":1,"conditions":[{"lastTransitionTime":"2021-11-12T11:13:23Z","lastUpdateTime":"2021-11-12T11:13:23Z","message":"Deployment has minimum availability.","reason":"MinimumReplicasAvailable","status":"True","type":"Available"},{"lastTransitionTime":"2021-11-12T11:13:20Z","lastUpdateTime":"2021-11-12T11:13:23Z","message":"ReplicaSet \"iperf-7d64f95bd5\" has successfully progressed.","reason":"NewReplicaSetAvailable","status":"True","type":"Progressing"}],"observedGeneration":1,"readyReplicas":1,"replicas":1,"updatedReplicas":1}}
+                                   creationTimestamp: "2021-11-12T11:13:20Z"
+                                   generation: 2
+kubectl-create            Update   labels:
+kubectl-create            Update     app: foo
+                                   name: foo
+                                   namespace: default
+                                 spec:
+kubectl-create            Update   progressDeadlineSeconds: 600
+kubectl-client-side-apply Update   replicas: 2
+kubectl-create            Update   revisionHistoryLimit: 10
+kubectl-create            Update   selector:
+kubectl-create            Update     matchLabels:
+kubectl-create            Update       app: iperf
+                                   strategy:
+kubectl-create            Update     rollingUpdate:
+kubectl-create            Update       maxSurge: 25%
+kubectl-create            Update       maxUnavailable: 25%
+kubectl-create            Update     type: RollingUpdate
+                                   template:
+                                     metadata:
+                                       creationTimestamp: null
+kubectl-create            Update       labels:
+kubectl-create            Update         app: iperf
+                                     spec:
+                                       containers:
+kubectl-create            Update       - image: knight42/iperf:latest
+kubectl-create            Update         imagePullPolicy: Always
+kubectl-create            Update         name: iperf
+kubectl-create            Update         resources: {}
+kubectl-create            Update         terminationMessagePath: /dev/termination-log
+kubectl-create            Update         terminationMessagePolicy: File
+kubectl-create            Update       dnsPolicy: ClusterFirst
+kubectl-create            Update       restartPolicy: Always
+kubectl-create            Update       schedulerName: default-scheduler
+kubectl-create            Update       securityContext: {}
+kubectl-create            Update       terminationGracePeriodSeconds: 30
+                                 status:
+kube-controller-manager   Update   availableReplicas: 2
+kube-controller-manager   Update   conditions:
+kube-controller-manager   Update   - lastTransitionTime: "2021-11-12T11:13:20Z"
+kube-controller-manager   Update     lastUpdateTime: "2021-11-12T11:13:23Z"
+kube-controller-manager   Update     message: ReplicaSet "iperf-7d64f95bd5" has successfully progressed.
+kube-controller-manager   Update     reason: NewReplicaSetAvailable
+kube-controller-manager   Update     status: "True"
+kube-controller-manager   Update     type: Progressing
+kube-controller-manager   Update   - lastTransitionTime: "2021-11-12T11:13:58Z"
+kube-controller-manager   Update     lastUpdateTime: "2021-11-12T11:13:58Z"
+kube-controller-manager   Update     message: Deployment has minimum availability.
+kube-controller-manager   Update     reason: MinimumReplicasAvailable
+kube-controller-manager   Update     status: "True"
+kube-controller-manager   Update     type: Available
+kube-controller-manager   Update   observedGeneration: 2
+kube-controller-manager   Update   readyReplicas: 2
+kube-controller-manager   Update   replicas: 2
+kube-controller-manager   Update   updatedReplicas: 2
+---
+                               apiVersion: apps/v1
+                               kind: Deployment
+                               metadata:
+kube-controller-manager Update   annotations:
+kube-controller-manager Update     deployment.kubernetes.io/revision: "1"
+                                 creationTimestamp: "2021-09-29T06:25:31Z"
+                                 generation: 1
+kubeadm                 Update   labels:
+kubeadm                 Update     k8s-app: kube-dns
+                                 name: coredns
+                                 namespace: kube-system
+                                 resourceVersion: "3026179"
+                                 uid: f05853eb-7e56-4d49-9924-142522c0dd5c
+                               spec:
+kubeadm                 Update   progressDeadlineSeconds: 600
+kubeadm                 Update   replicas: 2
+kubeadm                 Update   revisionHistoryLimit: 10
+kubeadm                 Update   selector:
+kubeadm                 Update     matchLabels:
+kubeadm                 Update       k8s-app: kube-dns
+                                 strategy:
+kubeadm                 Update     rollingUpdate:
+kubeadm                 Update       maxSurge: 25%
+kubeadm                 Update       maxUnavailable: 1
+kubeadm                 Update     type: RollingUpdate
+                                 template:
+                                   metadata:
+                                     creationTimestamp: null
+kubeadm                 Update       labels:
+kubeadm                 Update         k8s-app: kube-dns
+                                   spec:
+                                     containers:
+kubeadm                 Update       - args:
+kubeadm                 Update         - -conf
+kubeadm                 Update         - /etc/coredns/Corefile
+kubeadm                 Update         image: k8s.gcr.io/coredns/coredns:v1.8.0
+kubeadm                 Update         imagePullPolicy: IfNotPresent
+kubeadm                 Update         livenessProbe:
+kubeadm                 Update           failureThreshold: 5
+kubeadm                 Update           httpGet:
+kubeadm                 Update             path: /health
+kubeadm                 Update             port: 8080
+kubeadm                 Update             scheme: HTTP
+kubeadm                 Update           initialDelaySeconds: 60
+kubeadm                 Update           periodSeconds: 10
+kubeadm                 Update           successThreshold: 1
+kubeadm                 Update           timeoutSeconds: 5
+kubeadm                 Update         name: coredns
+kubeadm                 Update         ports:
+kubeadm                 Update         - containerPort: 53
+kubeadm                 Update           name: dns
+kubeadm                 Update           protocol: UDP
+kubeadm                 Update         - containerPort: 53
+kubeadm                 Update           name: dns-tcp
+kubeadm                 Update           protocol: TCP
+kubeadm                 Update         - containerPort: 9153
+kubeadm                 Update           name: metrics
+kubeadm                 Update           protocol: TCP
+kubeadm                 Update         readinessProbe:
+kubeadm                 Update           failureThreshold: 3
+kubeadm                 Update           httpGet:
+kubeadm                 Update             path: /ready
+kubeadm                 Update             port: 8181
+kubeadm                 Update             scheme: HTTP
+kubeadm                 Update           periodSeconds: 10
+kubeadm                 Update           successThreshold: 1
+kubeadm                 Update           timeoutSeconds: 1
+kubeadm                 Update         resources:
+kubeadm                 Update           limits:
+kubeadm                 Update             memory: 170Mi
+kubeadm                 Update           requests:
+kubeadm                 Update             cpu: 100m
+kubeadm                 Update             memory: 70Mi
+kubeadm                 Update         securityContext:
+kubeadm                 Update           allowPrivilegeEscalation: false
+kubeadm                 Update           capabilities:
+kubeadm                 Update             add:
+kubeadm                 Update             - NET_BIND_SERVICE
+kubeadm                 Update             drop:
+kubeadm                 Update             - all
+kubeadm                 Update           readOnlyRootFilesystem: true
+kubeadm                 Update         terminationMessagePath: /dev/termination-log
+kubeadm                 Update         terminationMessagePolicy: File
+kubeadm                 Update         volumeMounts:
+kubeadm                 Update         - mountPath: /etc/coredns
+kubeadm                 Update           name: config-volume
+kubeadm                 Update           readOnly: true
+kubeadm                 Update       dnsPolicy: Default
+kubeadm                 Update       nodeSelector:
+kubeadm                 Update         kubernetes.io/os: linux
+kubeadm                 Update       priorityClassName: system-cluster-critical
+kubeadm                 Update       restartPolicy: Always
+kubeadm                 Update       schedulerName: default-scheduler
+kubeadm                 Update       securityContext: {}
+kubeadm                 Update       serviceAccount: coredns
+kubeadm                 Update       serviceAccountName: coredns
+kubeadm                 Update       terminationGracePeriodSeconds: 30
+kubeadm                 Update       tolerations:
+kubeadm                 Update       - key: CriticalAddonsOnly
+kubeadm                 Update         operator: Exists
+kubeadm                 Update       - effect: NoSchedule
+kubeadm                 Update         key: node-role.kubernetes.io/master
+kubeadm                 Update       - effect: NoSchedule
+kubeadm                 Update         key: node-role.kubernetes.io/control-plane
+kubeadm                 Update       volumes:
+kubeadm                 Update       - configMap:
+kubeadm                 Update           defaultMode: 420
+kubeadm                 Update           items:
+kubeadm                 Update           - key: Corefile
+kubeadm                 Update             path: Corefile
+kubeadm                 Update           name: coredns
+kubeadm                 Update         name: config-volume
+                               status:
+kube-controller-manager Update   availableReplicas: 2
+kube-controller-manager Update   conditions:
+kube-controller-manager Update   - lastTransitionTime: "2021-09-29T06:25:45Z"
+kube-controller-manager Update     lastUpdateTime: "2021-09-29T06:26:06Z"
+kube-controller-manager Update     message: ReplicaSet "coredns-558bd4d5db" has successfully progressed.
+kube-controller-manager Update     reason: NewReplicaSetAvailable
+kube-controller-manager Update     status: "True"
+kube-controller-manager Update     type: Progressing
+kube-controller-manager Update   - lastTransitionTime: "2021-11-02T12:14:38Z"
+kube-controller-manager Update     lastUpdateTime: "2021-11-02T12:14:38Z"
+kube-controller-manager Update     message: Deployment has minimum availability.
+kube-controller-manager Update     reason: MinimumReplicasAvailable
+kube-controller-manager Update     status: "True"
+kube-controller-manager Update     type: Available
+kube-controller-manager Update   observedGeneration: 1
+kube-controller-manager Update   readyReplicas: 2
+kube-controller-manager Update   replicas: 2
+kube-controller-manager Update   updatedReplicas: 2

@@ -11,6 +11,18 @@ to show who last modified the field.
 As long as the field `.metadata.manageFields` of the resource is set properly, this command
 is able to display the manager of each field.
 
+`kubectl-blame` can work in two ways:
+
+1. **Directly from the cluster** — fetch and blame resources in one step:
+   ```
+   kubectl blame deployments my-app
+   ```
+2. **From piped input** — use `kubectl get` (or any command that outputs YAML/JSON) and pipe the result:
+   ```
+   kubectl get deployments -o yaml | kubectl blame
+   ```
+   This also works with Kubernetes List objects (e.g., `kind: List`), so you can pipe the output of `kubectl get` which wraps multiple resources in a List.
+
 [![asciicast](https://asciinema.org/a/375008.svg)](https://asciinema.org/a/375008)
 
 ## Installing

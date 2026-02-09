@@ -122,9 +122,21 @@ func (o *Options) visitLocalObjects(visit func(object metav1.Object) error) erro
 			}
 			return err
 		}
-		err = visit(obj)
-		if err != nil {
-			return err
+		if obj.IsList() {
+			list, err := obj.ToList()
+			if err != nil {
+				return err
+			}
+			for i := range list.Items {
+				if err := visit(&list.Items[i]); err != nil {
+					return err
+				}
+			}
+		} else {
+			err = visit(obj)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

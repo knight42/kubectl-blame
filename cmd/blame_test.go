@@ -55,6 +55,9 @@ func TestBlameLocalFile(t *testing.T) {
 		"multi-manager-list-item": {
 			inputFile: "multi-manager-list-item.yaml",
 		},
+		"list": {
+			inputFile: "list.yaml",
+		},
 	}
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
