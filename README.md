@@ -58,5 +58,6 @@ cat deployment.yaml | kubectl blame
 | flag               | default    | description                                                              |
 |--------------------|------------|--------------------------------------------------------------------------|
 | `--time`           | `relative` | Time format. One of: `full`, `relative`, `none`.                         |
+| `--color`          | `auto`     | Color output. One of: `auto`, `always`, `never`.                         |
 | `--filename`, `-f` |            | Filename identifying the resource to get from a server.                  |
 | `--input`, `-i`    | `auto`     | Read object from the given file. When set to `auto`, automatically read from stdin if piped. Use `-` to force reading from stdin. |

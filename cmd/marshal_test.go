@@ -232,7 +232,7 @@ m1 (Update 2020-11-23 16:52:45 +0000) /
 m2 (Update 2020-11-23 16:52:45 +0000)   serviceAccountName: foo
                                       status: {}
 `
-	data, err := MarshalMetaObject(pod, TimeFormatFull)
+	data, err := MarshalMetaObject(pod, TimeFormatFull, nil)
 	r.NoError(err)
 	if diff := cmp.Diff(expected, string(data)); len(diff) > 0 {
 		t.Errorf("unexpected diff (-want +got): %s", diff)

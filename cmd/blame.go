@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -16,6 +17,7 @@ import (
 
 type Options struct {
 	timeFormat   string
+	colorMode    string
 	inputFile    string
 	fileNameOpts resource.FilenameOptions
 
@@ -78,6 +80,7 @@ func NewCmdBlame() *cobra.Command {
 	flags := cmd.Flags()
 	f.AddFlags(flags)
 	flags.StringVar(&o.timeFormat, "time", TimeFormatRelative, "Time format. One of: full|relative|none.")
+	flags.StringVar(&o.colorMode, "color", "auto", "Color output. One of: auto|always|never.")
 	flags.StringSliceVarP(&o.fileNameOpts.Filenames, "filename", "f", o.fileNameOpts.Filenames, "Filename identifying the resource to get from a server.")
 	flags.StringVarP(&o.inputFile, "input", "i", "auto", "Read object from the given file. When set to 'auto', automatically read from stdin if piped. Use '-' to force reading from stdin.")
 	return cmd
@@ -174,9 +177,24 @@ func (o *Options) visitClusterObjects(visit func(object metav1.Object) error) er
 	})
 }
 
+func (o *Options) resolveColorEnabled() bool {
+	switch o.colorMode {
+	case "always":
+		return true
+	case "never":
+		return false
+	default: // "auto"
+		if f, ok := o.out.(*os.File); ok {
+			return term.IsTerminal(int(f.Fd()))
+		}
+		return false
+	}
+}
+
 func (o *Options) Run() error {
+	colorizer := NewColorizer(o.resolveColorEnabled())
 	enc := newEncoder(o.out, func(obj metav1.Object) ([]byte, error) {
-		return MarshalMetaObject(obj, o.timeFormat)
+		return MarshalMetaObject(obj, o.timeFormat, colorizer)
 	})
 
 	if o.inputFile == "auto" {

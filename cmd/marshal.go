@@ -35,6 +35,7 @@ type Marshaller struct {
 
 	now        time.Time
 	timeFormat string
+	colorizer  *Colorizer
 }
 
 type ManagerInfo struct {
@@ -176,10 +177,11 @@ func (m *Marshaller) buildTree(managedFields []metav1.ManagedFieldsEntry, mgrMax
 	return root, nil
 }
 
-func MarshalMetaObject(obj metav1.Object, timeFmt string) ([]byte, error) {
+func MarshalMetaObject(obj metav1.Object, timeFmt string, colorizer *Colorizer) ([]byte, error) {
 	m := Marshaller{
 		now:        time.Now(),
 		timeFormat: timeFmt,
+		colorizer:  colorizer,
 	}
 	return m.marshalMetaObject(obj)
 }
@@ -262,10 +264,10 @@ func (m *Marshaller) marshalMapWithCtx(ctx Context, o map[string]interface{}, w 
 		} else {
 			ok := child != nil
 			if ok {
-				info := getInfoOr(child, m.emptyInfo)
+				info := getInfoOr(child, m.emptyInfo, m.colorizer)
 				writeString(w, info)
 			} else {
-				info := getInfoOr(root, m.emptyInfo)
+				info := getInfoOr(root, m.emptyInfo, m.colorizer)
 				writeString(w, info)
 			}
 			writeIndent(w, ctx.Level)
@@ -323,7 +325,7 @@ func (m *Marshaller) marshalListWithCtx(ctx Context, o []interface{}, w io.Write
 	}
 
 	root := ctx.Node
-	prefix := getInfoOr(root, m.emptyInfo)
+	prefix := getInfoOr(root, m.emptyInfo, m.colorizer)
 	for i, val := range o {
 		switch actual := val.(type) {
 		case map[string]interface{}:
@@ -334,11 +336,11 @@ func (m *Marshaller) marshalListWithCtx(ctx Context, o []interface{}, w io.Write
 					break
 				}
 			}
-			mapPrefix := getInfoOr(child, m.emptyInfo)
+			mapPrefix := getInfoOr(child, m.emptyInfo, m.colorizer)
 			if len(actual) > 0 {
 				firstKey := firstSortedMapKey(actual)
 				if fc := child.Fields[firstKey]; fc != nil {
-					mapPrefix = getInfoOr(fc, m.emptyInfo)
+					mapPrefix = getInfoOr(fc, m.emptyInfo, m.colorizer)
 				}
 			}
 			writeString(w, mapPrefix)
@@ -364,7 +366,7 @@ func (m *Marshaller) marshalListWithCtx(ctx Context, o []interface{}, w io.Write
 		if root.Values != nil {
 			s := value.ToString(value.NewValueInterface(val))
 			if v, ok := root.Values[s]; ok {
-				valPrefix = getInfoOr(v.Node, m.emptyInfo)
+				valPrefix = getInfoOr(v.Node, m.emptyInfo, m.colorizer)
 			}
 		}
 		writeString(w, valPrefix)
