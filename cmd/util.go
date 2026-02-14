@@ -6,7 +6,6 @@ import (
 	"io"
 	"strconv"
 	"strings"
-	"time"
 	"unicode"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -200,30 +199,3 @@ func fieldListMatchObject(fl value.FieldList, o map[string]interface{}) bool {
 	return true
 }
 
-// humanDuration returns a human-readable approximation of a duration
-// (eg. "About a minute", "4 hours ago", etc.).
-// Copied from https://github.com/docker/go-units/blob/519db1ee28dcc9fd2474ae59fca29a810482bfb1/duration.go#L12
-func humanDuration(d time.Duration) string {
-	if seconds := int(d.Seconds()); seconds < 1 {
-		return "Less than a second ago"
-	} else if seconds == 1 {
-		return "1 second ago"
-	} else if seconds < 60 {
-		return fmt.Sprintf("%d seconds ago", seconds)
-	} else if minutes := int(d.Minutes()); minutes == 1 {
-		return "About a minute ago"
-	} else if minutes < 60 {
-		return fmt.Sprintf("%d minutes ago", minutes)
-	} else if hours := int(d.Hours() + 0.5); hours == 1 {
-		return "About an hour ago"
-	} else if hours < 48 {
-		return fmt.Sprintf("%d hours ago", hours)
-	} else if hours < 24*7*2 {
-		return fmt.Sprintf("%d days ago", hours/24)
-	} else if hours < 24*30*2 {
-		return fmt.Sprintf("%d weeks ago", hours/24/7)
-	} else if hours < 24*365*2 {
-		return fmt.Sprintf("%d months ago", hours/24/30)
-	}
-	return fmt.Sprintf("%d years ago", int(d.Hours())/24/365)
-}

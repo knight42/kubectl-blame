@@ -11,6 +11,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/duration"
 	"k8s.io/apimachinery/pkg/util/errors"
 	"sigs.k8s.io/structured-merge-diff/v4/fieldpath"
 	"sigs.k8s.io/structured-merge-diff/v4/value"
@@ -90,7 +91,7 @@ func (m *Marshaller) buildTree(managedFields []metav1.ManagedFieldsEntry, mgrMax
 			if t == nil {
 				return ""
 			}
-			return humanDuration(m.now.Sub(t.Time))
+			return duration.HumanDuration(m.now.Sub(t.Time))
 		}
 	case TimeFormatNone:
 		timeFormatter = func(t *metav1.Time) string {
@@ -205,7 +206,7 @@ func (m *Marshaller) marshalMetaObject(obj metav1.Object) ([]byte, error) {
 		}
 
 		if relativeTime && field.Time != nil {
-			d := humanDuration(m.now.Sub(field.Time.Time))
+			d := duration.HumanDuration(m.now.Sub(field.Time.Time))
 			if len(d) > timeMaxLength {
 				timeMaxLength = len(d)
 			}
