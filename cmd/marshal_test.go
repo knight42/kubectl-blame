@@ -203,7 +203,6 @@ func TestMarshaller_MarshalMetaObject(t *testing.T) {
 	}
 
 	const expected = `                                      metadata:
-                                        creationTimestamp: null
 m1 (Update 2020-11-23 16:52:45 +0000)   finalizers:
 m1 (Update 2020-11-23 16:52:45 +0000)   - service.kubernetes.io/load-balancer-cleanup
 m2 (Update 2020-11-23 16:52:45 +0000)   - service.kubernetes.io/foo
